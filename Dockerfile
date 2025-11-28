@@ -1,4 +1,4 @@
-FROM oven/bun:1-alpine AS deps
+FROM oven/bun:1-debian AS deps
 
 WORKDIR /app
 
@@ -6,7 +6,7 @@ COPY package.json bun.lock ./
 
 RUN bun install --frozen-lockfile
 
-FROM oven/bun:1-alpine AS builder
+FROM oven/bun:1-debian AS builder
 
 WORKDIR /app
 
@@ -19,18 +19,17 @@ ENV DOCKER_BUILD=true
 
 RUN bun run build
 
-FROM oven/bun:1-alpine AS runner
+FROM oven/bun:1-debian AS runner
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
+RUN groupadd --system --gid 1001 nodejs && \
+    useradd --system --uid 1001 nextjs
 
-
-    COPY --from=builder --chown=nextjs:nodejs /app/.open-next ./
+COPY --from=builder --chown=nextjs:nodejs /app/.open-next ./
 
 USER nextjs
 
